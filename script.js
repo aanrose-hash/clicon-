@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         let numericPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
-        let existingItem = cart.find(item => item.id === product.id);
+        let existingItem = cart.find(item => item.name === product.name);
 
         if (existingItem) {
             existingItem.quantity += quantity; 
@@ -46,7 +46,12 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         saveCart();
-        alert(`Added ${product.name} to your cart!`);
+        const toast = document.getElementById("simpleToast");
+        toast.innerText = `${product.name} added to cart!`;
+        toast.classList.remove("toast-hidden");
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+        }, 3000);
     };
 
     // 1b. GLOBAL WISHLIST SYSTEM
@@ -65,12 +70,12 @@ document.addEventListener("DOMContentLoaded", function() {
             
             wishlist.splice(existingIndex, 1);
             buttonElement.classList.remove('active-heart');
-            alert("Removed from wishlist!");
+            // alert("Removed from wishlist!");
         } else {
            
             wishlist.push(product);
             buttonElement.classList.add('active-heart');
-            alert("Added to wishlist!");
+            // alert("Added to wishlist!");
         }
         
         saveWishlist(); 
@@ -91,37 +96,35 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // LIVE SEARCH FUNCTIONALITY
    
-    // const searchInput = document.getElementById("searchInput");
+    const searchInput = document.getElementById("searchInput");
 
-    // if (searchInput) {
-    //     // 'input' event fires every single time a letter is typed or deleted
-    //     searchInput.addEventListener("input", function(event) {
+    if (searchInput) {
+       
+        searchInput.addEventListener("input", function(event) {
             
-    //         // 1. Get what the user typed and make it lowercase
-    //         const searchTerm = event.target.value.toLowerCase();
-            
-    //         // 2. Find ALL product cards currently on the screen
-    //         const allCards = document.querySelectorAll(".small-card, .list-card, .featured-card");
+           
+            const searchTerm = event.target.value.toLowerCase();
+           
+            const allCards = document.querySelectorAll(".small-card, .list-card, .featured-card");
 
-    //         // 3. Loop through every single card
-    //         allCards.forEach(card => {
+            allCards.forEach(card => {
                 
-    //             // Find the title inside this specific card and make it lowercase
-    //             const titleElement = card.querySelector(".product-title, .list-card-title, h4, h3");
+               
+                const titleElement = card.querySelector(".product-title, .list-card-title, h4, h3");
                 
-    //             if (titleElement) {
-    //                 const titleText = titleElement.innerText.toLowerCase();
+                if (titleElement) {
+                    const titleText = titleElement.innerText.toLowerCase();
 
-    //                 // 4. Check if the title includes the letters the user typed
-    //                 if (titleText.includes(searchTerm)) {
-    //                     card.style.display = ""; // Show it (returns to default CSS)
-    //                 } else {
-    //                     card.style.display = "none"; // Hide it
-    //                 }
-    //             }
-    //         });
-    //     });
-    // }
+                    
+                    if (titleText.includes(searchTerm)) {
+                        card.style.display = ""; 
+                    } else {
+                        card.style.display = "none"; 
+                    }
+                }
+            });
+        });
+    }
 
 
 
@@ -189,6 +192,10 @@ document.addEventListener("DOMContentLoaded", function() {
             badgesHTML += `<span class="badge ${badge.class}">${badge.text}</span>`;
         });
 
+        
+        let isWishlisted = wishlist.some(item => item.id === featuredProduct.id);
+        let heartClass = isWishlisted ? 'active-heart' : ''; 
+
         featuredContainer.innerHTML = `
             <div class="badges">
                 ${badgesHTML}
@@ -204,7 +211,8 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <p class="product-desc">${featuredProduct.description}</p>
             <div class="card-actions">
-                <button class="icon-btn active-heart" onclick="handleFeaturedAction(event, 'wishlist')">
+                <!-- NEW: We inject the heartClass variable here -->
+                <button class="icon-btn ${heartClass}" onclick="handleFeaturedAction(event, 'wishlist')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                 </button>
                 <button class="add-cart-btn" onclick="handleFeaturedAction(event, 'cart')">
@@ -221,6 +229,8 @@ document.addEventListener("DOMContentLoaded", function() {
         featuredContainer.addEventListener('click', () => window.openModal(featuredProduct));
     }
 
+    
+
     // 4. Inject the Small Product Grid
     const gridContainer = document.getElementById("smallProductsGrid");
     if (gridContainer) {
@@ -228,13 +238,18 @@ document.addEventListener("DOMContentLoaded", function() {
             let badgeHTML = product.badgeText !== "" ? `<span class="badge ${product.badgeClass}" style="position:absolute; top:15px; left:15px; z-index:2;">${product.badgeText}</span>` : "";
             let originalPriceHTML = product.originalPrice !== "" ? `<span class="original-price">${product.originalPrice}</span>` : "";
 
+            let productId = 'prod_small_' + index;
+            let isWishlisted = wishlist.some(item => item.id === productId);
+            let heartClass = isWishlisted ? 'active-heart' : '';
+
             const cardHTML = `
                 <div class="small-card" onclick="window.openModal({id: 'prod_small_${index}', name: '${product.name}', price: '${product.price}', image: '${product.image}'})">
                     ${badgeHTML}
                     <div class="small-card-img-wrapper">
                         <img src="${product.image}" alt="Product Image" class="small-card-img">
                         <div class="hover-actions">
-                            <button class="circle-btn" onclick="handleOverlayAction(event, 'wishlist', ${index})">
+                            <!-- NEW: We inject the heartClass variable here -->
+                            <button class="circle-btn ${heartClass}" onclick="handleOverlayAction(event, 'wishlist', ${index})">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                             </button>
                             <button class="circle-btn" onclick="handleOverlayAction(event, 'cart', ${index})">
@@ -277,9 +292,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Small Cards Overlay Actions
     window.handleOverlayAction = function(event, action, index) {
-        event.stopPropagation(); // Stops the whole card click from firing
+        event.stopPropagation(); 
         
-        // Grab the correct product data
+       
         const prod = products[index];
         const productData = {
             id: 'prod_small_' + index,
@@ -295,21 +310,57 @@ document.addEventListener("DOMContentLoaded", function() {
             window.addToCartGlobal(productData, 1);
         } 
         else if (action === 'view') {
-            window.openModal(productData); // Opens the Quick View Modal
+            window.openModal(productData); 
         }
     };
 
     
-    // 4. CATEGORY CAROUSEL
+  
    
+    // 4. INFINITE CATEGORY CAROUSEL
     const categoryTrack = document.getElementById('categoryTrack');
     const prevBtn = document.getElementById('categoryPrev');
     const nextBtn = document.getElementById('categoryNext');
-    const scrollAmount = 200; 
 
     if (categoryTrack && nextBtn && prevBtn) {
-        nextBtn.addEventListener('click', () => categoryTrack.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
-        prevBtn.addEventListener('click', () => categoryTrack.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
+        
+        nextBtn.addEventListener('click', () => {
+            
+            const cardWidth = categoryTrack.querySelector('.category-card').offsetWidth + 18; 
+            
+      
+            categoryTrack.scrollBy({ left: cardWidth, behavior: 'smooth' });
+
+            setTimeout(() => {
+               
+                const firstCard = categoryTrack.firstElementChild;
+                categoryTrack.appendChild(firstCard);
+                
+              
+                categoryTrack.style.scrollBehavior = 'auto';
+                categoryTrack.scrollLeft -= cardWidth;
+                categoryTrack.style.scrollBehavior = 'smooth';
+            }, 300); 
+        });
+
+        prevBtn.addEventListener('click', () => {
+            const cardWidth = categoryTrack.querySelector('.category-card').offsetWidth + 18;
+            
+           
+            const lastCard = categoryTrack.lastElementChild;
+            categoryTrack.prepend(lastCard);
+            
+            
+            categoryTrack.style.scrollBehavior = 'auto';
+            categoryTrack.scrollLeft += cardWidth;
+            
+            
+            categoryTrack.style.scrollBehavior = 'smooth';
+            
+            setTimeout(() => {
+                categoryTrack.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+            }, 10);
+        });
     }
 
 
@@ -353,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     if(closeModalBtn) closeModalBtn.addEventListener('click', window.closeModal);
-    if(modalOverlay) modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) window.closeModal(); });
+    // if(modalOverlay) modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) window.closeModal(); });
 
     // Modal Quantity Buttons
     if(qtyMinus) {
@@ -399,29 +450,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    const buyNowBtn = document.getElementById("buyNowBtn");
-    
-    if (buyNowBtn) {
-        buyNowBtn.addEventListener("click", function() {
-            
-          
-            const addToCartBtn = document.getElementById("addToCartBtn");
-            if (addToCartBtn) {
-                addToCartBtn.click(); 
-            }
-
-            const headerCartIcon = document.querySelector(".cart-icon"); 
-            if (headerCartIcon) {
-                headerCartIcon.click(); 
-            }
-
-            
-            const closeModalBtn = document.getElementById("closeModalBtn");
-            if (closeModalBtn) {
-                closeModalBtn.click();
-            }
-        });
-    }
 
 
   
@@ -431,7 +459,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     if (cartContainer) {
         
-        // Re-draws the entire cart list and updates math
+        
         window.renderCartPage = function() {
             cartContainer.innerHTML = ''; 
             let subtotal = 0;
@@ -488,19 +516,21 @@ document.addEventListener("DOMContentLoaded", function() {
             renderCartPage(); 
         };
 
-        // Calculates checkout totals box
         function updateTotalsBox(subtotal) {
-            const discount = 24.00;
-            const tax = 61.99;
+            
             
             let finalTotal = 0;
-          
+            const discount = subtotal*.1;
+            const tax = subtotal*.18;
             if(subtotal > 0) {
                 finalTotal = (subtotal - discount + tax);
             }
+            
 
             document.getElementById('summarySubtotal').innerText = '$' + subtotal.toFixed(2);
             document.getElementById('summaryTotal').innerText = '$' + finalTotal.toFixed(2) + ' USD';
+            document.getElementById('discount').innerText = '$' + discount.toFixed(2);
+            document.getElementById('tax').innerText = '$' + tax.toFixed(2);
         }
 
         renderCartPage();
